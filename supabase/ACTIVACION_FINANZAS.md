@@ -35,3 +35,14 @@ No usar `--yes`, `migration repair` ni `db reset`. Tras ejecutar, consultar el h
 - Una recuperación integral exige restaurar y verificar también Auth. El respaldo actual solo permite recuperar `public` en un entorno aislado y el trigger, con la limitación documentada en `supabase/README.md`. Storage no tenía objetos en la comprobación, pero volver a consultar antes de aplicar.
 
 No se ha probado una restauración integral ni se ha aplicado la migración remota.
+
+## Segunda migración (2026-11-16): categorías, fechas y anulación
+
+`20261116170000_finanzas_categorias_fechas_anulacion.sql` se aplica **junto con** la primera (el mismo `db push` envía ambas, en orden). Añade:
+
+- `grant select` explícito a `authenticated` sobre `cuentas`, `categorias`, `movimientos`, `asignaciones_dinero` e `historial_asignaciones`. El volcado remoto del 2026-11-04 muestra que ese rol **no** tenía `SELECT` en esas tablas; sin este permiso la pantalla de Finanzas falla al cargar aunque RLS esté bien. RLS sigue limitando cada fila a su dueño.
+- Categorías solo por RPC: `finanzas_crear_categoria`, `finanzas_desactivar_categoria` (conserva el historial) y `finanzas_crear_categorias_sugeridas` (Trabajo, Padres, Ventas, Otros ingresos, Comida, Transporte, Estudios, Personal, Otros gastos).
+- Fecha elegible (`p_fecha date`, hora de Lima, nunca futura) en `finanzas_registrar_movimiento` y `finanzas_transferir`. Las firmas anteriores se reemplazan.
+- `finanzas_anular_movimiento`: marca `anulado_at`/`anulado_motivo` sin borrar filas, revierte cuenta y destino, anula ambos lados de una transferencia y rechaza anulaciones que dejarían saldos negativos. El saldo inicial no se anula.
+
+Verificado el 2026-11-16 en un Postgres desechable (PGlite) cargado con el volcado de `public` y una simulación mínima de `auth`: ambas migraciones se aplican, `tests/finanzas.sql` y `tests/finanzas_categorias_fechas_anulacion.sql` pasan, y `anon` no puede leer tablas ni invocar las RPC. Conviene repetir ambas pruebas en Supabase local antes del despliegue.

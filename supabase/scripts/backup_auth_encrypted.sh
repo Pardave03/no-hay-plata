@@ -44,7 +44,10 @@ trap cleanup EXIT
 
 # Archivo custom de pg_dump: conserva valores UUID y todas las tablas de auth.
 # Solo el flujo cifrado llega al disco. No ejecutar con trazas de shell (set -x).
-pg_dump --password --format=custom --data-only --schema=auth --no-owner --no-privileges \
+command -v pg_dump >/dev/null || { echo 'Falta pg_dump (instala postgresql-client compatible con el servidor)' >&2; exit 1; }
+echo "Conectando a $PGHOST:$PGPORT como $PGUSER (base $PGDATABASE)..." >&2
+pg_dump --host="$PGHOST" --port="$PGPORT" --username="$PGUSER" --dbname="$PGDATABASE" \
+  --password --format=custom --data-only --schema=auth --no-owner --no-privileges \
   | gpg --batch --yes --encrypt --recipient "$GPG_RECIPIENT" --output "$partial"
 
 test -s "$partial"
