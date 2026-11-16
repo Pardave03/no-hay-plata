@@ -46,3 +46,9 @@ No se ha probado una restauración integral ni se ha aplicado la migración remo
 - `finanzas_anular_movimiento`: marca `anulado_at`/`anulado_motivo` sin borrar filas, revierte cuenta y destino, anula ambos lados de una transferencia y rechaza anulaciones que dejarían saldos negativos. El saldo inicial no se anula.
 
 Verificado el 2026-11-16 en un Postgres desechable (PGlite) cargado con el volcado de `public` y una simulación mínima de `auth`: ambas migraciones se aplican, `tests/finanzas.sql` y `tests/finanzas_categorias_fechas_anulacion.sql` pasan, y `anon` no puede leer tablas ni invocar las RPC. Conviene repetir ambas pruebas en Supabase local antes del despliegue.
+
+## Aplicación remota (2026-11-16)
+
+Con aprobación del dueño, ambas migraciones se aplicaron desde el SQL Editor del panel en **una sola transacción** (el proyecto estaba pausado y se reactivó antes). Se omitió el respaldo de Auth porque las tablas financieras estaban vacías y las migraciones no tocan `auth`. Antes: 0 filas en las tablas financieras, 1 usuario, 1 perfil, `authenticated` sin `SELECT`. Después: las 11 funciones `finanzas_*` tienen el mismo hash de código que en la prueba local; `authenticated` puede leer pero no insertar; `anon` no lee ni ejecuta; RLS activo en todas las tablas de `public`.
+
+Como el SQL Editor no registra el historial, se creó `supabase_migrations.schema_migrations` (con RLS) y se insertaron las versiones `20261104191448` y `20261116170000`, para que `supabase db push` no intente reaplicarlas. **Pendiente:** respaldo cifrado de Auth antes de cargar datos reales.
