@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js'
 import { MenuLateral } from './componentes/MenuLateral'
 import { Acceso } from './modulos/Acceso'
 import { Inicio } from './modulos/Inicio'
+import { Finanzas } from './modulos/Finanzas'
 import { PaginaProvisional } from './modulos/PaginaProvisional'
 import { negocioSubsecciones, obtenerRuta, secciones } from './servicios/navegacion'
 import { supabase } from './servicios/supabase'
@@ -90,7 +91,7 @@ function App() {
       <main className="content">
         {errorSesion && <div className="app-error" role="alert">{errorSesion}</div>}
         {errorPerfil && <div className="app-error" role="alert">{errorPerfil}</div>}
-        {ruta === 'inicio' ? <Inicio nombre={nombre} /> : <PaginaProvisional titulo={titulo ?? 'Inicio'} />}
+        {ruta === 'inicio' ? <Inicio nombre={nombre} /> : ruta === 'finanzas' ? <Finanzas key={sesion.user.id} usuarioId={sesion.user.id} /> : <PaginaProvisional titulo={titulo ?? 'Inicio'} />}
       </main>
     </div>
   </div>
