@@ -5,10 +5,10 @@ import {
   crearCategoriasSugeridas, hoyLima, ModuloNoDisponible,
   type DatosFinanzas, type Destino, type Movimiento, type TipoCuenta,
 } from '../servicios/finanzas'
+import { useDinero } from '../servicios/privacidad'
 import '../estilos/finanzas.css'
 
 const destinos: Destino[] = ['personal', 'negocio', 'ahorros']
-const dinero = (valor: number) => new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(valor)
 const etiqueta = (valor: string) => valor.replaceAll('_', ' ').replace(/^./, (letra) => letra.toUpperCase())
 
 function montoValido(valor: string, permiteCero = false): number | null {
@@ -21,6 +21,7 @@ function montoValido(valor: string, permiteCero = false): number | null {
 function centimos(valor: number) { return Math.round(valor * 100) }
 
 export function Finanzas({ usuarioId }: { usuarioId: string }) {
+  const dinero = useDinero()
   const [datos, setDatos] = useState<DatosFinanzas | null>(null)
   const [revision, setRevision] = useState(0)
   const [cargando, setCargando] = useState(true)

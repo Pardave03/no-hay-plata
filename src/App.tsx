@@ -4,10 +4,13 @@ import { MenuLateral } from './componentes/MenuLateral'
 import { Acceso } from './modulos/Acceso'
 import { Inicio } from './modulos/Inicio'
 import { Finanzas } from './modulos/Finanzas'
+import { Deudas } from './modulos/Deudas'
 import { PaginaProvisional } from './modulos/PaginaProvisional'
 import { negocioSubsecciones, obtenerRuta, secciones } from './servicios/navegacion'
+import { ContextoPrivacidad } from './servicios/privacidad'
 import { supabase } from './servicios/supabase'
 import './estilos/app.css'
+import './estilos/modulos.css'
 
 type Perfil = { userId: string; nombre: string }
 
@@ -19,6 +22,7 @@ function App() {
   const [errorPerfil, setErrorPerfil] = useState('')
   const [errorSesion, setErrorSesion] = useState('')
   const [cerrandoSesion, setCerrandoSesion] = useState(false)
+  const [montosVisibles, setMontosVisibles] = useState(true)
 
   useEffect(() => {
     const actualizar = () => setRuta(obtenerRuta())
@@ -84,17 +88,21 @@ function App() {
   const nombre = perfil && perfil.userId === userId ? perfil.nombre :
     (typeof sesion.user.user_metadata?.nombre === 'string' ? sesion.user.user_metadata.nombre : 'Usuario')
 
-  return <div className="app-shell">
+  return <ContextoPrivacidad.Provider value={{ visible: montosVisibles, alternar: () => setMontosVisibles((actual) => !actual) }}>
+  <div className="app-shell">
     <MenuLateral ruta={ruta} abierto={menuAbierto} cerrar={() => setMenuAbierto(false)} nombre={nombre} cerrarSesion={cerrarSesion} cerrandoSesion={cerrandoSesion} />
     <div className="main-area">
-      <header className="topbar"><button className="menu-toggle" type="button" onClick={() => setMenuAbierto(true)} aria-label="Abrir menú" aria-expanded={menuAbierto}>☰</button><span className="topbar-path">Mi espacio <span>/</span> <strong>{titulo}</strong></span><span className="topbar-avatar" aria-label={`Usuario ${nombre}`}>{nombre.charAt(0).toUpperCase()}</span></header>
+      <header className="topbar"><button className="menu-toggle" type="button" onClick={() => setMenuAbierto(true)} aria-label="Abrir menú" aria-expanded={menuAbierto}>☰</button><span className="topbar-path">Mi espacio <span>/</span> <strong>{titulo}</strong></span>
+        <button className="topbar-privacidad" type="button" onClick={() => setMontosVisibles((actual) => !actual)} aria-pressed={!montosVisibles} aria-label={montosVisibles ? 'Ocultar montos' : 'Mostrar montos'}>{montosVisibles ? '◉' : '◎'}<span> {montosVisibles ? 'Ocultar montos' : 'Mostrar montos'}</span></button>
+        <span className="topbar-avatar" aria-label={`Usuario ${nombre}`}>{nombre.charAt(0).toUpperCase()}</span></header>
       <main className="content">
         {errorSesion && <div className="app-error" role="alert">{errorSesion}</div>}
         {errorPerfil && <div className="app-error" role="alert">{errorPerfil}</div>}
-        {ruta === 'inicio' ? <Inicio nombre={nombre} /> : ruta === 'finanzas' ? <Finanzas key={sesion.user.id} usuarioId={sesion.user.id} /> : <PaginaProvisional titulo={titulo ?? 'Inicio'} />}
+        {ruta === 'inicio' ? <Inicio nombre={nombre} /> : ruta === 'finanzas' ? <Finanzas key={sesion.user.id} usuarioId={sesion.user.id} /> : ruta === 'deudas' ? <Deudas /> : <PaginaProvisional titulo={titulo ?? 'Inicio'} />}
       </main>
     </div>
   </div>
+  </ContextoPrivacidad.Provider>
 }
 
 export default App
