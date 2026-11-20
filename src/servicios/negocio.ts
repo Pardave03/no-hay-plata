@@ -26,6 +26,10 @@ export type Compra = {
 }
 export type DatosNegocio = { productos: Producto[]; ventas: Venta[]; compras: Compra[]; cuentas: Cuenta[] }
 
+export const cargarProductos = () => filas<Producto>(
+  supabase.from('productos').select('id,nombre,precio_venta,costo_promedio,stock,stock_minimo,fecha_vencimiento,activo').order('nombre'),
+)
+
 export async function cargarNegocio(): Promise<DatosNegocio> {
   const [productos, ventas, compras, cuentas] = await Promise.all([
     filas<Producto>(supabase.from('productos').select('id,nombre,precio_venta,costo_promedio,stock,stock_minimo,fecha_vencimiento,activo').order('nombre')),
